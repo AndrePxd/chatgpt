@@ -25,43 +25,112 @@ class HomePage extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: Obx(
-                () => ListView.builder(
+              child: Obx(() {
+                final isGeneratingResponse =
+                    _chatController.isGeneratingResponse.value;
+
+                return ListView.builder(
                   itemCount: _chatController.messages.length,
                   itemBuilder: (context, index) {
+                    bool isUser = _chatController.messages[index]['isUser'];
+                    bool isImage = _chatController.messages[index]['isImage'];
+                    String text = _chatController.messages[index]['text'];
+
+                    if (isGeneratingResponse &&
+                        index == _chatController.messages.length - 1) {
+                      // Show loading indicator as a separate message
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 10.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                          ],
+                        ),
+                      );
+                    }
+
                     return Container(
-                      margin: const EdgeInsets.symmetric(vertical: 5.0),
+                      margin: const EdgeInsets.symmetric(vertical: 10.0),
                       child: Row(
-                        mainAxisAlignment: _chatController.messages[index]
-                                ['isUser']
+                        mainAxisAlignment: isUser
                             ? MainAxisAlignment.end
                             : MainAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.center, // Alineación horizontal
                         children: [
+                          if (!isUser)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 7.0),
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.grey,
+                              ),
+                            ),
                           Flexible(
                             child: Container(
                               padding: const EdgeInsets.all(12.0),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(20.0),
-                                color: _chatController.messages[index]['isUser']
-                                    ? Color.fromARGB(255, 165, 205, 225)
-                                    : Color.fromARGB(255, 151, 251, 202),
+                                color: isUser
+                                    ? Color(0xFF0099FF)
+                                    : Color(0xFF00CC99),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 1,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                              child: _chatController.messages[index]['isImage']
-                                  ? Image.network(
-                                      _chatController.messages[index]['text'],
-                                    )
-                                  : Text(
-                                      _chatController.messages[index]['text'],
-                                      style: TextStyle(fontSize: 16.0),
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  if (!isImage && isUser)
+                                    Text(
+                                      text,
+                                      style: TextStyle(
+                                        fontSize: 16.0,
+                                        color: Colors.white,
+                                      ),
                                     ),
+                                  if (!isImage && !isUser)
+                                    Text(
+                                      text,
+                                      style: TextStyle(
+                                        fontSize: 16.0,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  if (isImage)
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      child: Image.network(
+                                        text,
+                                        width: 200,
+                                        height: 200,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
+                          if (isUser)
+                            Padding(
+                              padding: const EdgeInsets.only(left: 8.0),
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.grey,
+                              ),
+                            ),
                         ],
                       ),
                     );
                   },
-                ),
-              ),
+                );
+              }),
             ),
             Padding(
               padding: const EdgeInsets.all(8.0),

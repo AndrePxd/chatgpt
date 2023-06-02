@@ -11,10 +11,14 @@ class ChatController extends GetxController {
   String apiKey = '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';
   String url = 'https://api.openai.com/v1/images/generations';
 
+  RxBool isGeneratingResponse = false.obs;
+
   Future<void> sendMessage() async {
     var text = controller.text;
 
     messages.add({'text': text, 'isUser': true, 'isImage': false});
+    isGeneratingResponse.value = true;
+
     var res = await sendTextCompletionRequest(text);
     if (res != null && res.containsKey("choices")) {
       messages.add({
@@ -30,6 +34,7 @@ class ChatController extends GetxController {
       });
     }
 
+    isGeneratingResponse.value = false;
     controller.clear();
   }
 
@@ -40,6 +45,9 @@ class ChatController extends GetxController {
         "n": 1,
         "size": "256x256",
       };
+
+      messages.add({'text': controller.text, 'isUser': true, 'isImage': false});
+      isGeneratingResponse.value = true;
 
       var res = await http.post(Uri.parse(url),
           headers: {
@@ -54,6 +62,8 @@ class ChatController extends GetxController {
       } else {
         messages.add({'text': 'No response from server.', 'isUser': false});
       }
+
+      isGeneratingResponse.value = false;
       controller.clear();
     } else {
       print("Error");
