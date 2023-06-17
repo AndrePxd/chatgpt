@@ -41,6 +41,32 @@ class MapController extends GetxController {
       }
     }
   }
+
+  void searchPlaceByAddress(BuildContext context, String address) async {
+    final prediction = await placesApiProvider.autocomplete(
+      address,
+      sessionToken: uuid.v4(),
+    );
+    if (prediction.predictions.isNotEmpty) {
+      final placeId = prediction.predictions[0].placeId;
+      final details = await placesApiProvider.getDetailsByPlaceId(
+        placeId!,
+        sessionToken: uuid.v4(),
+      );
+      if (details.status == "OK") {
+        final location = details.result.geometry?.location;
+        if (location != null) {
+          selectedLocation.value = LatLng(location.lat, location.lng);
+          mapController?.animateCamera(
+            CameraUpdate.newLatLngZoom(
+              LatLng(location.lat, location.lng),
+              15.0,
+            ),
+          );
+        }
+      }
+    }
+  }
 }
 
 class MapWidget extends StatelessWidget {
@@ -49,10 +75,19 @@ class MapWidget extends StatelessWidget {
     zoom: 11.5,
   );
 
+  final String direccion;
+
+  MapWidget({Key? key, required this.direccion}) : super(key: key);
+
   final MapController mapController = Get.put(MapController());
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      // Llama al método de búsqueda de dirección automáticamente después de que se construye el widget
+      mapController.searchPlaceByAddress(context, direccion);
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Mapa'),
@@ -60,12 +95,15 @@ class MapWidget extends StatelessWidget {
       ),
       body: Column(
         children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Buscar lugar',
-              suffixIcon: Icon(Icons.search),
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Buscar lugar',
+                suffixIcon: Icon(Icons.search),
+              ),
+              onTap: () => mapController.searchPlace(context),
             ),
-            onTap: () => mapController.searchPlace(context),
           ),
           Expanded(
             child: Obx(

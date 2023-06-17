@@ -10,6 +10,7 @@ class HomePage extends StatelessWidget {
   final ChatController _chatController = Get.put(ChatController());
 
   @override
+  String direccion = "";
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFF343540),
@@ -30,7 +31,10 @@ class HomePage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => MapWidget()),
+                MaterialPageRoute(
+                    builder: (context) => MapWidget(
+                          direccion: direccion,
+                        )),
               );
             },
           ),
@@ -179,6 +183,18 @@ class HomePage extends StatelessWidget {
                         _chatController.generateAIImage();
                       } else {
                         _chatController.sendMessage();
+                      }
+                      //si empieza por dir: abre el mapa y mostrar la direccion que le pasas
+                      if (_chatController.controller.text.startsWith('dir: ')) {
+                        direccion =
+                            _chatController.controller.text.substring(4);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MapWidget(
+                                    direccion: direccion,
+                                  )),
+                        );
                       }
                     },
                     child: Padding(
